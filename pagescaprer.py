@@ -21,7 +21,7 @@ class pageScraper:
     def __init__(self, url= str, path_name= str, file_name= str, scroll_iter: int= 0):
         # This initial statement sort the necesary values to work with this class
         self.url = url
-        self.path= f"./{path_name}"
+        self.path= f"{path_name}"
         self.file= f"{file_name}.html"
         self.full_path= f"./{path_name}/{file_name}.html"
         self.scroll= scroll_iter
@@ -33,11 +33,11 @@ class pageScraper:
         options.add_argument('--disable-gpu')
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options= options)
         driver.get(self.url)
-        
+        driver.page_source
         for i in range(int(self.scroll)):
             driver.execute_script("window.scrollBy(0,500)","")
             driver.implicitly_wait(3)
-            time.sleep(2)
+            time.sleep(1)
             i+=1
         
         
@@ -317,7 +317,7 @@ class pageScraper:
 
 
 url= "https://www.classcentral.com/"
-path= 'classcentralcopy'
+path= './classcentralcopy'
 file= "index"
 scroll= 10
 page1= pageScraper(url, path, file, scroll)
@@ -331,7 +331,7 @@ def index_translate(page):
     page.link_complete(link_list=links_a, internal_dir= False)
     page.link_complete(link_list=links_js, internal_dir= True)
     page.translation(lang_in='en', lang_out='hi')
-    page.translateByTag(lang_in='en', lang_out='hi', container_tag="a")
+    #page.translateByTag(lang_in='en', lang_out='hi', container_tag="a")
     page.translateByTag(lang_in='en', lang_out='hi', container_tag="h3")
 
 def first_level():
@@ -339,28 +339,36 @@ def first_level():
     com_links_a= page1.get_links(link_tag= "a", attrs_tag= "href")
     counter=0
     scroll= page1.scroll
-    path = f"{page1.path}/level"
+    path = f"classcentralcopy/level"
     print(path)
     print(">>> Begining multilink processing...")
     for link in com_links_a:
-        counter+=1
-        file= f"levelone_{counter}"
-        try:
-            link_to_path[link]= f"{file}.html"
-            page1_lv1= pageScraper(link, path, file, scroll)
-            index_translate(page1_lv1)
-        except:
-            link_to_path[link]= f"Error: File number: {counter}"
-    
-    for item in link_to_path:
-        if link_to_path[item].startsWith("Error:"):
-            print(f"Error: \n >>> {item} ----> {link_to_path[item]}")
+        if link != page1.url:
+            counter+=1
+            file= f"levelone_{counter}"
+            full_p=f"{path}/{file}.html"
+            if os.path.exists(full_p):
+                pass
+            else:
+                try:
+                    link_to_path[link]= f"{file}.html"
+                    
+                    page1_lv1= pageScraper(link, path, file, scroll)
+                    index_translate(page1_lv1)
+                except:
+                    link_to_path[link]= f"Error: File number: {counter}"
+        
+        for item in link_to_path:
+            if link_to_path[item].startswith("Error:"):
+                print(f"Error: \n >>> {item} ----> {link_to_path[item]}")
     
     print(">>> Multilink processig finished")
-       
+    with open(f"{link_to_path}.txt", "w") as links:
+        links.write(link_to_path)
+    return link_to_path  
     
     
-first_level()
+new_linkpaths= first_level()
 # print(page1.url)
 # print(page1.path)
 # print(page1.file)
