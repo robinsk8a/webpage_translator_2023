@@ -59,8 +59,8 @@ class pageScraper:
         # We create the container folder
         if not os.path.exists(self.path):
             os.mkdir(self.path)
-            with open(os.path.join(self.path, self.file), "w") as f:
-                f.write(str(soup))
+        with open(os.path.join(self.path, self.file), "w") as f:
+            f.write(str(soup))
                 
     
         print(f"Your html file is store in the {self.path} folder:\n >>> File path:  {self.full_path}  <<<")
@@ -319,7 +319,7 @@ class pageScraper:
 url= "https://www.classcentral.com/"
 path= './classcentralcopy'
 file= "index"
-scroll= 10
+scroll= 15
 page1= pageScraper(url, path, file, scroll)
 
 def index_translate(page):
@@ -332,7 +332,7 @@ def index_translate(page):
     page.link_complete(link_list=links_js, internal_dir= True)
     page.translation(lang_in='en', lang_out='hi')
     #page.translateByTag(lang_in='en', lang_out='hi', container_tag="a")
-    page.translateByTag(lang_in='en', lang_out='hi', container_tag="h3")
+    #page.translateByTag(lang_in='en', lang_out='hi', container_tag="h3")
 
 def first_level():
     link_to_path= {}
@@ -342,13 +342,16 @@ def first_level():
     path = f"classcentralcopy/level"
     print(path)
     print(">>> Begining multilink processing...")
-    for link in com_links_a:
+    non_dup = []
+    # Cleaning the list
+    [non_dup.append(x) for x in com_links_a if x not in non_dup]
+    for link in non_dup:
         if link != page1.url:
             counter+=1
             file= f"levelone_{counter}"
             full_p=f"{path}/{file}.html"
             if os.path.exists(full_p):
-                pass
+                link_to_path[link]= f"{file}.html"
             else:
                 try:
                     link_to_path[link]= f"{file}.html"
@@ -372,3 +375,14 @@ new_linkpaths= first_level()
 # print(page1.url)
 # print(page1.path)
 # print(page1.file)
+
+def place_local_path(links_vs_path: dict):
+    with open("classcentralcopy/index.html", "r") as f:
+        soup= f.read()
+    for link in links_vs_path:
+        if not links_vs_path[link].startswith("Error:"):
+            
+            print(f"{link} ----> {links_vs_path[link]}")
+            soup=  re.sub(link, f"/level/{links_vs_path[link]}", soup)
+            with open("classcentralcopy/index.html", "w") as fi:
+                fi.write(soup)
